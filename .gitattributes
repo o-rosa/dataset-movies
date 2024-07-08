@@ -1,4 +1,4 @@
 .csv filter=lfs diff=lfs merge=lfs -text
 .parquet filter=lfs diff=lfs merge=lfs -text
-the_movies_dataset/ratings.csv filter=lfs diff=lfs merge=lfs -text
-the_movies_dataset/credits.csv filter=lfs diff=lfs merge=lfs -text
+input/ratings.csv filter=lfs diff=lfs merge=lfs -text
+input/credits.csv filter=lfs diff=lfs merge=lfs -text
