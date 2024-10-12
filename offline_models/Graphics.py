@@ -1,5 +1,7 @@
 import numpy as np
+import seaborn as sns
 import matplotlib.pyplot as plt
+
 class Graphics:
     def __init__(self) -> None:
         pass
@@ -76,4 +78,14 @@ class Graphics:
         fig.tight_layout()
         # Salvando o gráfico
         plt.savefig(f'./plots/{metrica}_comparison.png')
+        plt.show()
+
+    def correlation_matrix(self, df):
+        correlation_matrix = df.corr()
+        # Criando o heatmap
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', cbar=True, square=True, fmt='.2f', annot_kws={"size": 6})
+        plt.title('Heatmap de Correlações')
+        plt.xticks(rotation=45, ha='right', fontsize=12)
+        plt.yticks(rotation=0, fontsize=12)
         plt.show()

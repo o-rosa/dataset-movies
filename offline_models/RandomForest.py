@@ -7,6 +7,7 @@ from imblearn.under_sampling import RandomUnderSampler
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import precision_score, recall_score, f1_score, make_scorer
+
 class RandomForest:
     def __init__(self, X_train: pd.DataFrame, X_test: pd.DataFrame, y_train: pd.DataFrame, y_test: pd.DataFrame):
         """
