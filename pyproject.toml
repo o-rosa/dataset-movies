@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dataset_movies"
-version = "0.2.2"
+version = "0.2.2" 
 description = ""
 authors = ["Otavio Rosa <otavio.nunes021@gmail.com>"]
 readme = "README.md"
