@@ -1,17 +1,15 @@
 import pandas as pd
 import numpy as np
-from sklearn.metrics import accuracy_score
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import StratifiedKFold, RandomizedSearchCV
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, make_scorer
+from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import precision_score, recall_score, f1_score, make_scorer
-
-class RandomForest:
+from sklearn.neural_network import MLPClassifier
+class Mlp:
     def __init__(self, X_train: pd.DataFrame, X_test: pd.DataFrame, y_train: pd.DataFrame, y_test: pd.DataFrame):
         """
-        Inicializa a classe RandomForest com os dados de treinamento e teste.
+        Inicializa a classe MLP com os dados de treinamento e teste.
         Defina aqui novos valores para os hiperparametros.
         Parâmetros:
         - X_train (pd.DataFrame): Dados de entrada para treinamento.
@@ -27,24 +25,13 @@ class RandomForest:
         self.k = 5
         self.skf = StratifiedKFold(n_splits=self.k)
         self.param_grid = {
-            'n_estimators': [90, 180, 360], # Número de árvores na floresta
-            'criterion': ['entropy'], # função score (faz a divisão de um nó)
-            'max_depth': [None, 14, 18, 22], # Profundidade máxima da árvore
-            'min_samples_split': [10, 50], # Número mínimo de amostras necessárias para dividir um nó.
-            'min_samples_leaf': [2, 10], # Número mínimo de amostras que devem estar presentes em um nó folha.
-            'max_features': ['sqrt', 'log2'], # Número de atributos a serem considerados para a melhor divisão.
-            'bootstrap': [True], # Se as amostras devem ser extraídas com reposição.
-            'oob_score': [True] # Se o erro Out-of-Bag deve ser usado para avaliar a generalização.
+            'hidden_layer_sizes': [(16,), (32,), (64,)],
+            'activation': ['relu', 'tanh', 'logistic'],
+            'learning_rate_init': [0.001, 0.01, 0.1]
         }
-        self.scorer = make_scorer(precision_score, average='weighted')
-        self.model = RandomForestClassifier()
-        self.n_iter = 100  # RandomizedSearchCV
-        self.grid_search = RandomizedSearchCV(
-            estimator=self.model, param_distributions=self.param_grid,
-            cv=self.skf, scoring=self.scorer, n_jobs=-1,
-            n_iter=self.n_iter
-        )
-
+        self.scorer = make_scorer(precision_score, average='weighted', zero_division=0)
+        self.model = MLPClassifier(max_iter=1000)
+        self.grid_search = GridSearchCV(estimator=self.model, param_grid=self.param_grid, cv=self.skf, scoring=self.scorer)
     def metricas(self, precisions, recalls, f1_scores, accuracies, k, grid_search, v):
         """
         Calcula e exibe as métricas de desempenho do modelo.
@@ -54,7 +41,7 @@ class RandomForest:
         - f1_scores (list): Lista de F1-scores.
         - accuracies (list): Lista de acurácias.
         - k (int): Número de folds.
-        - grid_search (RandomizedSearchCV): Objeto RandomizedSearchCV treinado.
+        - grid_search (GridSearchCV): Objeto GridSearchCV treinado.
         - v (str): Nome da variação do modelo.
         Retorna:
         - dict: Dicionário contendo as métricas médias e seus desvios padrão.
@@ -73,12 +60,9 @@ class RandomForest:
         print(f'Média de Revocação: {mean_recall:.4f} ± {std_recall:.4f}')
         print(f'Média de F1-Score: {mean_f1:.4f} ± {std_f1:.4f}')
         print(f'Média de Acurácia: {mean_accuracy:.4f} ± {std_accuracy:.4f}')
-        print(f'Melhor n_estimators encontrado: {grid_search.best_params_["n_estimators"]}')
-        print(f'Melhor criterion encontrado: {grid_search.best_params_["criterion"]}')
-        print(f'Melhor max_depth encontrado: {grid_search.best_params_["max_depth"]}')
-        print(f'Melhor min_samples_split encontrado: {grid_search.best_params_["min_samples_split"]}')
-        print(f'Melhor min_samples_leaf encontrado: {grid_search.best_params_["min_samples_leaf"]}')
-        print(f'Melhor max_features encontrado: {grid_search.best_params_["max_features"]}')
+        print(f'Melhor número de neurônios encontrado: {grid_search.best_params_["hidden_layer_sizes"]}')
+        print(f'Melhor função de ativação encontrada: {grid_search.best_params_["activation"]}')
+        print(f'Melhor taxa de aprendizado encontrada: {grid_search.best_params_["learning_rate_init"]}')
         temp_dict = {
             "mean_f1": round(float(mean_f1), 2),
             "std_f1": round(float(std_f1), 4),
@@ -137,10 +121,9 @@ class RandomForest:
         test_recall = recall_score(self.y_test, y_test_pred, average='weighted')
         test_f1 = f1_score(self.y_test, y_test_pred, average='weighted')
         test_accuracy = accuracy_score(self.y_test, y_test_pred)
-        metrics_media = self.metricas(precisions, recalls, f1_scores, accuracies, self.k, self.grid_search, f"  {v} - Media das validações ")
+        metrics_media = self.metricas(precisions, recalls, f1_scores, accuracies, self.k, self.grid_search, f"  {v} - Media  das validações ")
         metrics_test = self.metricas([test_precision], [test_recall], [test_f1], [test_accuracy], 1, self.grid_search, f"  {v} - Teste ")
         return metrics_media, metrics_test
-
     def features_pca(self):
         """
         Treina e avalia o modelo usando PCA para redução de dimensionalidade.
@@ -163,6 +146,7 @@ class RandomForest:
             X_train_fold = pca.fit_transform(X_train_fold)
             X_val_fold = pca.transform(X_val_fold)
             scaler_normalize = MinMaxScaler()
+
             X_train_fold = scaler_normalize.fit_transform(X_train_fold)
             X_val_fold = scaler_normalize.transform(X_val_fold)
             # Melhor modelo da validação e predição
