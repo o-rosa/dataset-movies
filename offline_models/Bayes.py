@@ -4,7 +4,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.decomposition import PCA
-from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import BernoulliNB
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import precision_score, recall_score, f1_score, make_scorer
 
@@ -26,9 +26,9 @@ class Bayes:
         # Hyperparameters
         self.k = 10
         self.skf = StratifiedKFold(n_splits=self.k)
-        self.param_grid = {'var_smoothing': np.logspace(-9, -1, num=50)}
+        self.param_grid = {'alpha': [0.1, 0.5, 1]}
         self.scorer = make_scorer(precision_score, average='weighted')
-        self.model = GaussianNB()
+        self.model = BernoulliNB()
         self.grid_search = GridSearchCV(estimator=self.model, param_grid=self.param_grid, cv=self.skf, scoring=self.scorer)
     
     def metricas(self, precisions, recalls, f1_scores, accuracies, k, grid_search, v):
@@ -59,7 +59,7 @@ class Bayes:
         print(f'Média de Revocação: {mean_recall:.4f} ± {std_recall:.4f}')
         print(f'Média de F1-Score: {mean_f1:.4f} ± {std_f1:.4f}')
         print(f'Média de Acurácia: {mean_accuracy:.4f} ± {std_accuracy:.4f}')
-        print(f'Melhor var_smoothing encontrado: {grid_search.best_params_["var_smoothing"]}')
+        print(f'Melhor alpha encontrado: {grid_search.best_params_["alpha"]}')
         temp_dict = {
             "mean_f1": round(float(mean_f1), 2),
             "std_f1": round(float(std_f1), 4),
